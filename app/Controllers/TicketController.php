@@ -14,6 +14,7 @@ use App\Models\DepartmentModel;
 use App\Models\CategoryModel;
 use App\Helpers\FileUploader;
 use App\Helpers\Auditor;
+use App\Helpers\EmailHelper;
 
 class TicketController extends Controller {
 
@@ -160,6 +161,12 @@ class TicketController extends Controller {
             'requester_id' => $requesterId,
             'assigned_technician_id' => null
         ]);
+
+        // Send email notification of new ticket creation to admin
+        $newTicket = TicketModel::getById($ticketId);
+        if ($newTicket) {
+            EmailHelper::notifyNewTicket($newTicket);
+        }
 
         // If ticket has attachment files directly on comment creation
         $attachmentPath = null;
