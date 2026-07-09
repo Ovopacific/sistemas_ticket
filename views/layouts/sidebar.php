@@ -33,12 +33,7 @@ if ($currentUser):
         </a>
     </div>
 
-    <!-- Buscador Global Mock -->
-    <div class="d-none d-md-block search-wrapper">
-        <i class="bi bi-search"></i>
-        <input type="text" class="search-input-mock" placeholder="Buscar ticket o cliente..." readonly>
-        <span class="search-shortcut-badge">⌘K</span>
-    </div>
+
 
     <!-- Right Top Bar Actions -->
     <div class="d-flex align-items-center gap-3">
