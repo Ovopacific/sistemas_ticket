@@ -1,3 +1,5 @@
+/config/config.php
+/config/database.sql
 /public/uploads/*
 /logs/*
 .DS_Store

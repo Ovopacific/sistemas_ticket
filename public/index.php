@@ -33,7 +33,20 @@ spl_autoload_register(function ($class) {
 
 // 2. Installation Check
 $configFile = __DIR__ . '/../config/config.php';
-if (!file_exists($configFile)) {
+if (file_exists($configFile)) {
+    require_once $configFile;
+} else if (getenv('DB_HOST') !== false) {
+    // Load database settings securely from environment variables (Cloud production)
+    define('DB_HOST', getenv('DB_HOST'));
+    define('DB_PORT', getenv('DB_PORT') ?: '3306');
+    define('DB_NAME', getenv('DB_NAME') ?: 'defaultdb');
+    define('DB_USER', getenv('DB_USER'));
+    define('DB_PASS', getenv('DB_PASS'));
+    define('APP_KEY', getenv('APP_KEY') ?: 'bd183705ddb697b843bbc70a85f871314c4d8e7c7423a3d860e6db6a7a05e5d7');
+    define('UPLOAD_DIR', __DIR__ . '/../public/uploads');
+    define('LOG_DIR', __DIR__ . '/../logs');
+    define('DEBUG_MODE', false);
+} else {
     // If not installed, redirect to install wizard
     if (basename($_SERVER['PHP_SELF']) !== 'install.php') {
         header('Location: install.php');

@@ -14,13 +14,14 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$instance === null) {
-            // Check if config exists
-            $configFile = __DIR__ . '/../../config/config.php';
-            if (!file_exists($configFile)) {
-                throw new Exception("El archivo de configuración no existe. Por favor ejecute install.php.");
+            // Check if configuration constants are already defined, otherwise load config file
+            if (!defined('DB_HOST')) {
+                $configFile = __DIR__ . '/../../config/config.php';
+                if (!file_exists($configFile)) {
+                    throw new Exception("El archivo de configuración no existe. Por favor ejecute install.php.");
+                }
+                require_once $configFile;
             }
-
-            require_once $configFile;
 
             try {
                 $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
