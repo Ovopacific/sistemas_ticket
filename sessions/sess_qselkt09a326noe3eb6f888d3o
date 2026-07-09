@@ -1,0 +1,1 @@
+flash_messages|a:0:{}csrf_token|s:64:"8baa3c81b33fd64d3ca53b10fc2cbfe97d482379ecddefeb9f2d6e8ccd200f49";user|a:9:{s:2:"id";i:2;s:8:"username";s:17:"analistalogistica";s:5:"email";s:25:"pcastaneda@ovopacific.com";s:10:"first_name";s:5:"paola";s:9:"last_name";s:10:"castañeda";s:4:"role";s:4:"user";s:13:"department_id";i:3;s:11:"avatar_path";N;s:6:"status";s:6:"active";}

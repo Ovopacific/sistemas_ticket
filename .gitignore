@@ -1,0 +1,4 @@
+/public/uploads/*
+/logs/*
+.DS_Store
+Thumbs.db

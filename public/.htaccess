@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Direct requests to subfolders/files if they exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Forward all other requests to index.php
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
