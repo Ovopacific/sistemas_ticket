@@ -57,7 +57,6 @@ $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
                     <span style="height: 1px; width: 45px; background: linear-gradient(to left, transparent, rgba(249, 115, 22, 0.6));"></span>
                 </div>
                 
-                <p class="text-white text-opacity-70 text-xs text-center mb-0" style="font-weight: 500;">Accede a la plataforma de gestión empresarial</p>
             </div>
 
             <?php if (isset($_SESSION['flash_messages']['error'])): ?>

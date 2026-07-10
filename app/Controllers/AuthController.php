@@ -19,7 +19,7 @@ class AuthController extends Controller {
         if ($this->session->get('user')) {
             $this->response->redirect('/dashboard');
         }
-        $this->render('auth/login', [], 'Iniciar Sesión - Mesa de Ayuda');
+        $this->render('auth/login', [], 'Inicio');
     }
 
     /**
