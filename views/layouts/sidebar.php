@@ -163,8 +163,25 @@ if ($currentUser):
                 </li>
 
                 <!-- Settings Settings -->
-                <li class="<?php echo $isActive('/settings'); ?>">
-                    <a href="/settings"><i class="bi bi-sliders"></i> <span>Configuración</span></a>
+                <li class="<?php echo $isActive('/settings') ? 'active' : ''; ?>">
+                    <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="<?php echo ($isActive('/settings') !== '') ? 'true' : 'false'; ?>" class="dropdown-toggle d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-sliders"></i>
+                            <span>Configuración</span>
+                        </div>
+                    </a>
+                    <ul class="collapse list-unstyled <?php echo ($isActive('/settings') !== '') ? 'show' : ''; ?> ps-4 ms-2" id="settingsSubmenu">
+                        <li class="mt-1">
+                            <a href="/settings" class="py-1 px-2 d-flex align-items-center gap-2 <?php echo ($currentPath === '/settings') ? 'text-white' : 'text-muted'; ?>" style="font-size: 0.825rem; background: none;">
+                                <i class="bi bi-gear fs-6 p-0 m-0"></i> <span>Sistema</span>
+                            </a>
+                        </li>
+                        <li class="mt-1">
+                            <a href="/settings/smtp" class="py-1 px-2 d-flex align-items-center gap-2 <?php echo ($currentPath === '/settings/smtp') ? 'text-white' : 'text-muted'; ?>" style="font-size: 0.825rem; background: none;">
+                                <i class="bi bi-envelope-at fs-6 p-0 m-0"></i> <span>Configuración de Correo</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <!-- Audit Trail -->

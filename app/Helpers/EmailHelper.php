@@ -74,21 +74,166 @@ class EmailHelper {
     }
 
     /**
-     * Helper to send HTML emails using native PHP mail().
+     * Cifra un valor usando AES-256-CBC con la llave APP_KEY.
+     */
+    public static function encrypt(string $value): string {
+        $key = hash('sha256', APP_KEY, true);
+        $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+        $iv = openssl_random_pseudo_bytes($ivLength);
+        $encrypted = openssl_encrypt($value, 'aes-256-cbc', $key, 0, $iv);
+        return base64_encode($iv . $encrypted);
+    }
+
+    /**
+     * Descifra un valor usando AES-256-CBC con la llave APP_KEY.
+     */
+    public static function decrypt(string $value): string {
+        try {
+            $key = hash('sha256', APP_KEY, true);
+            $data = base64_decode($value);
+            $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+            $iv = substr($data, 0, $ivLength);
+            $encrypted = substr($data, $ivLength);
+            return openssl_decrypt($encrypted, 'aes-256-cbc', $key, 0, $iv) ?: '';
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
+
+    /**
+     * Envía un correo HTML utilizando la configuración SMTP de la base de datos o reporta inactividad.
      */
     public static function sendHtml(string $to, string $subject, string $body): bool {
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: Mesa de Ayuda Ovopacific <no-reply@ovopacific.com>\r\n";
-        
-        // Log notification attempt
-        Logger::info("Intentando enviar correo de notificación a: {$to} para el asunto: {$subject}");
+        Logger::info("Intentando enviar correo a: {$to} con asunto: {$subject}");
 
         try {
-            return mail($to, $subject, $body, $headers);
+            $db = \App\Core\Database::getConnection();
+            $stmt = $db->query("SELECT * FROM smtp_settings WHERE id = 1 LIMIT 1");
+            $config = $stmt->fetch();
+
+            if (!$config || $config['status'] !== 'active') {
+                Logger::warning("Envío de correo cancelado: la configuración SMTP está inactiva o no existe.");
+                return false;
+            }
+
+            // Cargar PHPMailer
+            require_once __DIR__ . '/../Libraries/PHPMailer/Exception.php';
+            require_once __DIR__ . '/../Libraries/PHPMailer/PHPMailer.php';
+            require_once __DIR__ . '/../Libraries/PHPMailer/SMTP.php';
+
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+            // Servidor
+            $mail->isSMTP();
+            $mail->Host = $config['mail_host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $config['mail_username'];
+            $mail->Password = self::decrypt($config['mail_password']);
+            $mail->Port = (int)$config['mail_port'];
+            $mail->Timeout = (int)$config['timeout'];
+
+            $encryption = strtolower($config['mail_encryption']);
+            if ($encryption === 'ssl') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($encryption === 'tls') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->SMTPSecure = '';
+                $mail->SMTPAutoTLS = false;
+            }
+
+            // Destinatarios
+            $mail->setFrom($config['mail_from'], $config['mail_from_name']);
+            $mail->addAddress($to);
+
+            if (!empty($config['reply_to'])) {
+                $mail->addReplyTo($config['reply_to']);
+            }
+
+            if (!empty($config['bcc'])) {
+                $mail->addBCC($config['bcc']);
+            }
+
+            // Contenido
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            $mail->CharSet = 'UTF-8';
+
+            $mail->send();
+            Logger::info("Correo enviado exitosamente a: {$to}");
+            return true;
         } catch (\Exception $e) {
-            Logger::error("Fallo al enviar notificación de correo: " . $e->getMessage());
+            Logger::error("Error de PHPMailer al enviar correo: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Método para enviar un correo de prueba y retornar el diagnóstico exacto.
+     */
+    public static function sendTestEmail(array $config, string $testEmail): array {
+        try {
+            // Cargar PHPMailer
+            require_once __DIR__ . '/../Libraries/PHPMailer/Exception.php';
+            require_once __DIR__ . '/../Libraries/PHPMailer/PHPMailer.php';
+            require_once __DIR__ . '/../Libraries/PHPMailer/SMTP.php';
+
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+            // Capturar logs de SMTP detallados
+            $smtpLog = '';
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) use (&$smtpLog) {
+                $smtpLog .= $str . "\n";
+            };
+
+            $mail->isSMTP();
+            $mail->Host = $config['mail_host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $config['mail_username'];
+            $mail->Password = $config['mail_password']; // Contraseña en texto plano para la prueba al vuelo
+            $mail->Port = (int)$config['mail_port'];
+            $mail->Timeout = (int)$config['timeout'];
+
+            $encryption = strtolower($config['mail_encryption']);
+            if ($encryption === 'ssl') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($encryption === 'tls') {
+                $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->SMTPSecure = '';
+                $mail->SMTPAutoTLS = false;
+            }
+
+            $mail->setFrom($config['mail_from'], $config['mail_from_name']);
+            $mail->addAddress($testEmail);
+
+            if (!empty($config['reply_to'])) {
+                $mail->addReplyTo($config['reply_to']);
+            }
+
+            if (!empty($config['bcc'])) {
+                $mail->addBCC($config['bcc']);
+            }
+
+            $mail->isHTML(true);
+            $mail->Subject = "Correo de Prueba - Configuración SMTP";
+            $mail->Body = "<h3>¡Conexión exitosa!</h3><p>Este es un correo de prueba enviado desde la configuración del sistema de soporte.</p>";
+            $mail->CharSet = 'UTF-8';
+
+            $mail->send();
+            return [
+                'status' => true,
+                'message' => '✅ Conexión realizada correctamente. Correo enviado correctamente.',
+                'log' => $smtpLog
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => '❌ Fallo al enviar el correo de prueba: ' . $e->getMessage(),
+                'log' => $smtpLog ?? 'No se pudo generar el log SMTP.'
+            ];
         }
     }
 }

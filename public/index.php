@@ -62,6 +62,7 @@ use App\Controllers\TicketController;
 use App\Controllers\UserController;
 use App\Controllers\DepartmentController;
 use App\Controllers\SettingsController;
+use App\Controllers\SmtpSettingsController;
 use App\Controllers\ReportController;
 
 $app = new App();
@@ -118,6 +119,9 @@ $app->post('/categories/delete/{id}', [DepartmentController::class, 'deleteCateg
 $app->get('/settings', [SettingsController::class, 'index']);
 $app->post('/settings/save', [SettingsController::class, 'save']);
 $app->post('/settings/logo', [SettingsController::class, 'uploadLogo']);
+$app->get('/settings/smtp', [SmtpSettingsController::class, 'index']);
+$app->post('/settings/smtp/save', [SmtpSettingsController::class, 'save']);
+$app->post('/settings/smtp/test', [SmtpSettingsController::class, 'test']);
 $app->post('/notifications/read/{id}', [DashboardController::class, 'markNotificationRead']);
 
 // 10. Register Reports and Audit Trail Routes
