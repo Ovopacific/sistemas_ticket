@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fixedHeight: false,
             labels: {
                 placeholder: "Buscar...",
-                perPage: "{select} registros por página",
+                perPage: "registros por página",
                 noRows: "No se encontraron registros",
                 info: "Mostrando {start} a {end} de {rows} registros",
             }
