@@ -101,6 +101,71 @@ class EmailHelper {
     }
 
     /**
+     * Envía un correo usando la API HTTP de Resend.
+     */
+    private static function sendViaResend(string $apiKey, string $from, string $fromName, string $to, string $subject, string $body, ?string $replyTo = null, ?string $bcc = null): array {
+        $url = 'https://api.resend.com/emails';
+        
+        $headers = [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json'
+        ];
+        
+        $fromEmail = $from;
+        if (!empty($fromName)) {
+            $fromEmail = "{$fromName} <{$from}>";
+        }
+        
+        $payload = [
+            'from' => $fromEmail,
+            'to' => [$to],
+            'subject' => $subject,
+            'html' => $body
+        ];
+        
+        if (!empty($replyTo)) {
+            $payload['reply_to'] = $replyTo;
+        }
+        
+        if (!empty($bcc)) {
+            $payload['bcc'] = [$bcc];
+        }
+        
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            return [
+                'status' => false,
+                'message' => 'Error de conexión con la API de Resend: ' . $error
+            ];
+        }
+        
+        $res = json_decode($response, true);
+        if ($httpCode >= 200 && $httpCode < 300 && isset($res['id'])) {
+            return [
+                'status' => true,
+                'message' => 'Correo enviado correctamente por API.'
+            ];
+        } else {
+            $errorMsg = isset($res['message']) ? $res['message'] : 'Respuesta HTTP: ' . $httpCode;
+            return [
+                'status' => false,
+                'message' => 'Resend API Error: ' . $errorMsg
+            ];
+        }
+    }
+
+    /**
      * Envía un correo HTML utilizando la configuración SMTP de la base de datos o reporta inactividad.
      */
     public static function sendHtml(string $to, string $subject, string $body): bool {
@@ -116,6 +181,20 @@ class EmailHelper {
                 return false;
             }
 
+            $password = self::decrypt($config['mail_password']);
+
+            // Si el host contiene 'resend' o la API key empieza con 're_'
+            if (strpos(strtolower($config['mail_host']), 'resend') !== false || strpos($password, 're_') === 0) {
+                $res = self::sendViaResend($password, $config['mail_from'], $config['mail_from_name'], $to, $subject, $body, $config['reply_to'], $config['bcc']);
+                if ($res['status']) {
+                    Logger::info("Correo enviado exitosamente vía Resend API a: {$to}");
+                    return true;
+                } else {
+                    Logger::error("Fallo al enviar correo vía Resend API: " . $res['message']);
+                    return false;
+                }
+            }
+
             // Cargar PHPMailer
             require_once __DIR__ . '/../Libraries/PHPMailer/Exception.php';
             require_once __DIR__ . '/../Libraries/PHPMailer/PHPMailer.php';
@@ -128,7 +207,7 @@ class EmailHelper {
             $mail->Host = $config['mail_host'];
             $mail->SMTPAuth = true;
             $mail->Username = $config['mail_username'];
-            $mail->Password = self::decrypt($config['mail_password']);
+            $mail->Password = $password;
             $mail->Port = (int)$config['mail_port'];
             $mail->Timeout = (int)$config['timeout'];
 
@@ -164,7 +243,7 @@ class EmailHelper {
             Logger::info("Correo enviado exitosamente a: {$to}");
             return true;
         } catch (\Exception $e) {
-            Logger::error("Error de PHPMailer al enviar correo: " . $e->getMessage());
+            Logger::error("Error al enviar correo: " . $e->getMessage());
             return false;
         }
     }
@@ -174,6 +253,18 @@ class EmailHelper {
      */
     public static function sendTestEmail(array $config, string $testEmail): array {
         try {
+            $password = $config['mail_password'];
+
+            // Si el host contiene 'resend' o la API key empieza con 're_'
+            if (strpos(strtolower($config['mail_host']), 'resend') !== false || strpos($password, 're_') === 0) {
+                $res = self::sendViaResend($password, $config['mail_from'], $config['mail_from_name'], $testEmail, "Correo de Prueba - Resend API", "<h3>¡Conexión exitosa!</h3><p>Este es un correo de prueba enviado desde la configuración del sistema de soporte a través de la API de Resend.</p>", $config['reply_to'], $config['bcc']);
+                return [
+                    'status' => $res['status'],
+                    'message' => $res['status'] ? '✅ Conexión realizada correctamente (Resend API). Correo enviado.' : '❌ Fallo al enviar correo vía Resend API: ' . $res['message'],
+                    'log' => "Resend API Response:\n" . json_encode($res, JSON_PRETTY_PRINT)
+                ];
+            }
+
             // Cargar PHPMailer
             require_once __DIR__ . '/../Libraries/PHPMailer/Exception.php';
             require_once __DIR__ . '/../Libraries/PHPMailer/PHPMailer.php';
@@ -192,7 +283,7 @@ class EmailHelper {
             $mail->Host = $config['mail_host'];
             $mail->SMTPAuth = true;
             $mail->Username = $config['mail_username'];
-            $mail->Password = $config['mail_password']; // Contraseña en texto plano para la prueba al vuelo
+            $mail->Password = $password; // Contraseña en texto plano para la prueba al vuelo
             $mail->Port = (int)$config['mail_port'];
             $mail->Timeout = (int)$config['timeout'];
 
