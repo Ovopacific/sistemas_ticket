@@ -16,6 +16,7 @@ $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
     <!-- Local Static Assets -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="<?php echo $basePath; ?>/assets/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="<?php echo $basePath; ?>/assets/css/simple-datatables.css">
     <link rel="stylesheet" href="<?php echo $basePath; ?>/assets/css/main.css">
     <style>
