@@ -53,33 +53,35 @@ if ($currentUser):
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 4px 6px;">
                         <?php echo count($notifications); ?>
                     </span>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', () => {
-                            function playNotificationSound() {
-                                try {
-                                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                                    const osc = audioCtx.createOscillator();
-                                    const gain = audioCtx.createGain();
-                                    osc.connect(gain);
-                                    gain.connect(audioCtx.destination);
-                                    osc.type = 'sine';
-                                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 tone
-                                    osc.frequency.exponentialRampToValueAtTime(880.00, audioCtx.currentTime + 0.12); // A5 chime
-                                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                                    osc.start(audioCtx.currentTime);
-                                    osc.stop(audioCtx.currentTime + 0.4);
-                                } catch (e) {
-                                    console.log("Audio feedback blocked until user interaction.");
+                    <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                function playNotificationSound() {
+                                    try {
+                                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                                        const osc = audioCtx.createOscillator();
+                                        const gain = audioCtx.createGain();
+                                        osc.connect(gain);
+                                        gain.connect(audioCtx.destination);
+                                        osc.type = 'sine';
+                                        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 tone
+                                        osc.frequency.exponentialRampToValueAtTime(880.00, audioCtx.currentTime + 0.12); // A5 chime
+                                        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                                        osc.start(audioCtx.currentTime);
+                                        osc.stop(audioCtx.currentTime + 0.4);
+                                    } catch (e) {
+                                        console.log("Audio feedback blocked until user interaction.");
+                                    }
                                 }
-                            }
-                            // Play on click anywhere if blocked initially
-                            const playOnce = () => { playNotificationSound(); document.removeEventListener('click', playOnce); };
-                            document.addEventListener('click', playOnce);
-                            // Try immediate play
-                            playNotificationSound();
-                        });
-                    </script>
+                                // Play on click anywhere if blocked initially
+                                const playOnce = () => { playNotificationSound(); document.removeEventListener('click', playOnce); };
+                                document.addEventListener('click', playOnce);
+                                // Try immediate play
+                                playNotificationSound();
+                            });
+                        </script>
+                    <?php endif; ?>
                 <?php endif; ?>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto; background-color: var(--card-bg); border: 1px solid var(--border-color) !important;">
