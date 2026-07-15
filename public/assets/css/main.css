@@ -873,7 +873,7 @@ main#content {
 
 main#content.fade-in-active {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
 }
 
 .page-transition-overlay {
