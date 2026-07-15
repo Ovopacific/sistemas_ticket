@@ -12,7 +12,7 @@ class EmailHelper {
      */
     public static function notifyNewTicket(array $ticket): bool {
         // Recipient email - configure this with your actual email address
-        $to = getenv('NOTIFICATION_EMAIL') ?: 'admin@ovopacific.com';
+        $to = getenv('NOTIFICATION_EMAIL') ?: 'imunoz@ovopacific.com';
         
         $subject = "🎫 Nuevo Ticket #" . $ticket['ticket_number'] . " - " . $ticket['title'];
         
