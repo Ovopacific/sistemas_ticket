@@ -13,7 +13,7 @@
 
             <div class="text-center mb-4">
                 <?php if (!empty($user['avatar_path'])): ?>
-                    <img src="/<?php echo htmlspecialchars($user['avatar_path']); ?>" alt="Avatar" class="rounded-circle border p-1" style="width: 120px; height: 120px; object-fit: cover;">
+                    <img src="<?php echo (strpos($user['avatar_path'], 'http') === 0 ? '' : '/') . htmlspecialchars($user['avatar_path']); ?>" alt="Avatar" class="rounded-circle border p-1" style="width: 120px; height: 120px; object-fit: cover;">
                 <?php else: ?>
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center border" style="width: 120px; height: 120px; font-size: 3rem; font-weight: bold;">
                         <?php echo strtoupper(substr($user['first_name'], 0, 1)); ?>
@@ -96,7 +96,15 @@
                     <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>" placeholder="ej. Ext 450">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="avatar" class="form-label fw-semibold">Fotografía de Perfil</label>
+                    <label for="avatar_url" class="form-label fw-semibold">O pegar URL de imagen de perfil:</label>
+                    <input type="url" class="form-control" id="avatar_url" name="avatar_url" placeholder="https://ejemplo.com/foto.png" value="<?php echo (strpos($user['avatar_path'] ?? '', 'http') === 0) ? htmlspecialchars($user['avatar_path']) : ''; ?>">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="avatar" class="form-label fw-semibold">O subir archivo de fotografía:</label>
                     <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
                 </div>
             </div>

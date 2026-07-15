@@ -193,14 +193,20 @@ class UserController extends Controller {
         }
 
         $avatarPath = $user['avatar_path'];
-        $avatarFile = $request->file('avatar');
-        if ($avatarFile && $avatarFile['error'] !== UPLOAD_ERR_NO_FILE) {
-            $upload = FileUploader::upload($avatarFile, 'avatars');
-            if ($upload['status']) {
-                $avatarPath = $upload['path'];
-            } else {
-                $this->session->setFlash('error', 'Error en avatar: ' . $upload['error']);
-                $this->response->redirect("/users/edit/{$id}");
+        $avatarUrl = trim($request->post('avatar_url', ''));
+        if (!empty($avatarUrl)) {
+            $avatarPath = $avatarUrl;
+        } else {
+            $avatarFile = $request->file('avatar');
+            if ($avatarFile && $avatarFile['error'] !== UPLOAD_ERR_NO_FILE) {
+                $upload = FileUploader::upload($avatarFile, 'avatars');
+                if ($upload['status']) {
+                    $avatarPath = $upload['path'];
+                } else {
+                    $this->session->setFlash('error', 'Error en avatar: ' . $upload['error']);
+                    $this->response->redirect("/users/edit/{$id}");
+                    return;
+                }
             }
         }
 

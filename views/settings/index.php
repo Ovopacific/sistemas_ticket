@@ -13,17 +13,25 @@
             <div class="card-body p-4 text-center">
                 <div class="mb-4 bg-light p-3 rounded d-inline-flex align-items-center justify-content-center" style="min-height: 120px; width: 100%;">
                     <?php if (!empty($settings['company_logo'])): ?>
-                        <img src="/<?php echo htmlspecialchars($settings['company_logo']); ?>" alt="Logo actual" class="img-fluid" style="max-height: 100px;">
+                        <?php 
+                        $logoSrc = (strpos($settings['company_logo'], 'http') === 0) ? $settings['company_logo'] : '/' . $settings['company_logo'];
+                        ?>
+                        <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo actual" class="img-fluid" style="max-height: 100px;">
                     <?php else: ?>
                         <div class="text-muted text-sm"><i class="bi bi-headset fs-2 d-block mb-2"></i> Sin logotipo configurado</div>
                     <?php endif; ?>
                 </div>
 
                 <form action="/settings/logo" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input type="file" class="form-control form-control-sm" name="logo" accept="image/*" required>
+                    <div class="mb-3 text-start">
+                        <label for="logo_url" class="form-label fw-semibold text-xs mb-1">Pegar URL de logotipo externo:</label>
+                        <input type="url" class="form-control form-control-sm" id="logo_url" name="logo_url" placeholder="https://ejemplo.com/logo.png" value="<?php echo (strpos($settings['company_logo'] ?? '', 'http') === 0) ? htmlspecialchars($settings['company_logo']) : ''; ?>">
                     </div>
-                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-upload"></i> Subir Nuevo Logo</button>
+                    <div class="mb-3 text-start">
+                        <label for="logo" class="form-label fw-semibold text-xs mb-1">O seleccionar archivo local:</label>
+                        <input type="file" class="form-control form-control-sm" id="logo" name="logo" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-check-circle"></i> Actualizar Logotipo</button>
                 </form>
             </div>
         </div>

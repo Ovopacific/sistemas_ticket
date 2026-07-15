@@ -77,6 +77,20 @@ class SettingsController extends Controller {
     public function uploadLogo(Request $request): void {
         $this->authorize(['admin']);
 
+        $logoUrl = trim($request->post('logo_url', ''));
+        if (!empty($logoUrl)) {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'company_logo'");
+            $stmt->execute([$logoUrl]);
+
+            $currentUser = $this->session->get('user');
+            Auditor::log($currentUser['id'], 'LOGO_UPDATE', 'Logotipo corporativo modificado vía URL');
+
+            $this->session->setFlash('success', 'Logotipo actualizado correctamente.');
+            $this->response->redirect('/settings');
+            return;
+        }
+
         $file = $request->file('logo');
         if ($file && $file['error'] !== UPLOAD_ERR_NO_FILE) {
             $upload = FileUploader::upload($file, 'branding');
@@ -93,7 +107,7 @@ class SettingsController extends Controller {
                 $this->session->setFlash('error', 'Error al subir logotipo: ' . $upload['error']);
             }
         } else {
-            $this->session->setFlash('error', 'No se ha seleccionado ningún archivo de logotipo.');
+            $this->session->setFlash('error', 'No se ha seleccionado ningún archivo o URL de logotipo.');
         }
 
         $this->response->redirect('/settings');

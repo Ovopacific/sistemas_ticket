@@ -15,7 +15,7 @@
                 <div class="card-body p-4 text-center">
                     <div class="position-relative d-inline-block mb-3">
                         <?php if (!empty($tech['avatar_path'])): ?>
-                            <img src="/<?php echo htmlspecialchars($tech['avatar_path']); ?>" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                            <img src="<?php echo (strpos($tech['avatar_path'], 'http') === 0 ? '' : '/') . htmlspecialchars($tech['avatar_path']); ?>" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
                         <?php else: ?>
                             <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
                                 <?php echo strtoupper(substr($tech['first_name'], 0, 1)); ?>

@@ -30,7 +30,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <?php if (!empty($user['avatar_path'])): ?>
-                                        <img src="/<?php echo htmlspecialchars($user['avatar_path']); ?>" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        <img src="<?php echo (strpos($user['avatar_path'], 'http') === 0 ? '' : '/') . htmlspecialchars($user['avatar_path']); ?>" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-weight: bold;">
                                             <?php echo strtoupper(substr($user['first_name'], 0, 1)); ?>

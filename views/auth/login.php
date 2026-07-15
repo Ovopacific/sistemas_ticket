@@ -41,7 +41,10 @@ $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
             <div class="text-center mb-4" style="transform: translateZ(30px);">
                 <!-- Logo de Ovopacific -->
                 <?php if (!empty($company_logo)): ?>
-                    <img src="<?php echo $basePath; ?>/<?php echo htmlspecialchars($company_logo); ?>" alt="Logo" class="img-fluid mb-2" style="max-height: 52px; border-radius: 4px;">
+                    <?php 
+                    $logoSrc = (strpos($company_logo, 'http') === 0) ? $company_logo : $basePath . '/' . $company_logo;
+                    ?>
+                    <img src="<?php echo htmlspecialchars($logoSrc); ?>" alt="Logo" class="img-fluid mb-2" style="max-height: 52px; border-radius: 4px;">
                 <?php else: ?>
                     <div class="bg-white bg-opacity-10 text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; border: 1px solid rgba(255,255,255,0.15);">
                         <i class="bi bi-headset fs-3" style="color: #67e8f9;"></i>

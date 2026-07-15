@@ -98,7 +98,7 @@ if ($currentUser) {
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
                                 <?php if (!empty($ticket['req_avatar'])): ?>
-                                    <img src="/<?php echo htmlspecialchars($ticket['req_avatar']); ?>" class="rounded-circle me-2" style="width: 36px; height: 36px; object-fit: cover;">
+                                    <img src="<?php echo (strpos($ticket['req_avatar'], 'http') === 0 ? '' : '/') . htmlspecialchars($ticket['req_avatar']); ?>" class="rounded-circle me-2" style="width: 36px; height: 36px; object-fit: cover;">
                                 <?php else: ?>
                                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; font-weight: bold;">
                                         <?php echo strtoupper(substr($ticket['req_first'], 0, 1)); ?>
@@ -137,7 +137,7 @@ if ($currentUser) {
                                     <div class="d-flex justify-content-between align-items-center mb-2 gap-3 pb-1 border-bottom" style="border-color: rgba(0,0,0,0.03) !important;">
                                         <div class="d-flex align-items-center gap-2">
                                             <?php if (!empty($comment['avatar_path'])): ?>
-                                                <img src="/<?php echo htmlspecialchars($comment['avatar_path']); ?>" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover;">
+                                                <img src="<?php echo (strpos($comment['avatar_path'], 'http') === 0 ? '' : '/') . htmlspecialchars($comment['avatar_path']); ?>" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover;">
                                             <?php endif; ?>
                                             <span class="chat-meta-name text-xs" style="color: var(--text-main);"><?php echo htmlspecialchars($comment['first_name'] . ' ' . $comment['last_name']); ?></span>
                                             <span class="badge rounded-pill text-uppercase" style="font-size: 8px; padding: 2px 6px; background-color: <?php echo $comment['role'] === 'admin' ? 'rgba(239, 68, 68, 0.1)' : ($comment['role'] === 'technician' ? 'rgba(79, 70, 229, 0.1)' : 'rgba(16, 185, 129, 0.1)'); ?>; color: <?php echo $comment['role'] === 'admin' ? '#ef4444' : ($comment['role'] === 'technician' ? '#4f46e5' : '#10b981'); ?>;">
@@ -299,7 +299,7 @@ if ($currentUser) {
                 </div>
                 <div class="card-body p-3 text-center">
                     <?php if (!empty($ticket['req_avatar'])): ?>
-                        <img src="/<?php echo htmlspecialchars($ticket['req_avatar']); ?>" alt="Avatar" class="rounded-circle mb-2" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--border-color);">
+                        <img src="<?php echo (strpos($ticket['req_avatar'], 'http') === 0 ? '' : '/') . htmlspecialchars($ticket['req_avatar']); ?>" alt="Avatar" class="rounded-circle mb-2" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--border-color);">
                     <?php else: ?>
                         <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; font-size: 1.25rem; font-weight: bold;">
                             <?php echo strtoupper(substr($ticket['req_first'], 0, 1)); ?>
