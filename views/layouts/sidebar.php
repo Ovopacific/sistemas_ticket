@@ -108,7 +108,7 @@ if ($currentUser):
         <div class="dropdown">
             <button class="btn btn-link text-decoration-none dropdown-toggle text-body d-flex align-items-center p-0 border-0" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
                 <?php if (!empty($currentUser['avatar_path'])): ?>
-                    <img src="/<?php echo htmlspecialchars($currentUser['avatar_path']); ?>" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                    <img src="/<?php echo htmlspecialchars($currentUser['avatar_path']); ?>" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" loading="lazy" decoding="async">
                 <?php else: ?>
                     <div class="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: 600; font-size: 0.85rem;">
                         <?php echo strtoupper(substr($currentUser['first_name'], 0, 1)); ?>
@@ -137,7 +137,7 @@ if ($currentUser):
         <!-- Sidebar Header -->
         <div class="sidebar-header d-flex align-items-center gap-3 px-4 py-3">
             <?php if (!empty($company_logo)): ?>
-                <img src="/<?php echo htmlspecialchars($company_logo); ?>" alt="Logo" style="width: 28px; height: 28px; object-fit: contain; border-radius: 8px;">
+                <img src="/<?php echo htmlspecialchars($company_logo); ?>" alt="Logo" style="width: 28px; height: 28px; object-fit: contain; border-radius: 8px;" loading="lazy" decoding="async">
             <?php else: ?>
                 <div class="logo-box d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; border-radius: 8px; background-color: #4169E1; color: #FFFFFF; font-weight: 700; font-size: 15px; flex-shrink: 0;">O</div>
             <?php endif; ?>
