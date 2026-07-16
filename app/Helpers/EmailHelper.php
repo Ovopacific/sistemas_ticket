@@ -24,7 +24,7 @@ class EmailHelper {
         </head>
         <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f5f7; padding: 20px;'>
             <div style='max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
-                <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Mesa de Ayuda - Ovopacific</h2>
+                <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Sistemas Ovopacific</h2>
                 <p style='font-size: 1rem; color: #555;'>Se ha registrado una nueva solicitud de soporte:</p>
                 
                 <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
@@ -89,7 +89,7 @@ class EmailHelper {
             <html><head><title>Ticket Asignado</title></head>
             <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f5f7; padding: 20px;'>
                 <div style='max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
-                    <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Mesa de Ayuda - Ovopacific</h2>
+                    <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Sistemas Ovopacific</h2>
                     <p style='font-size: 1rem; color: #555;'>Hola <strong>" . htmlspecialchars($ticket['req_first']) . "</strong>, tu solicitud de soporte ha sido asignada a un técnico y está siendo atendida.</p>
                     <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
                         <tr>
@@ -130,7 +130,7 @@ class EmailHelper {
             <html><head><title>Ticket Asignado</title></head>
             <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f5f7; padding: 20px;'>
                 <div style='max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
-                    <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Mesa de Ayuda - Ovopacific</h2>
+                    <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Sistemas Ovopacific</h2>
                     <p style='font-size: 1rem; color: #555;'>Hola <strong>" . htmlspecialchars($ticket['tech_first']) . "</strong>, se te ha asignado una nueva solicitud de soporte para tu atención.</p>
                     <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
                         <tr>
@@ -179,7 +179,7 @@ class EmailHelper {
         <html><head><title>Ticket Resuelto</title></head>
         <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f5f7; padding: 20px;'>
             <div style='max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
-                <h2 style='color: #198754; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>✅ Ticket Resuelto - Mesa de Ayuda Ovopacific</h2>
+                <h2 style='color: #198754; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>✅ Ticket Resuelto - Sistemas Ovopacific</h2>
                 <p style='font-size: 1rem; color: #555;'>La siguiente solicitud de soporte ha sido marcada como <strong>Resuelta</strong>.</p>
                 <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
                     <tr>
