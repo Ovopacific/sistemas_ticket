@@ -82,7 +82,7 @@ class EmailHelper {
         $techName = htmlspecialchars(($ticket['tech_first'] ?? '') . ' ' . ($ticket['tech_last'] ?? 'Sin asignar'));
         $statusName = htmlspecialchars($ticket['status_name'] ?? 'En proceso');
 
-        // Notify requester
+        // Send to requester
         if (!empty($ticket['req_email'])) {
             $subject = "📋 Tu Ticket #" . $ticket['ticket_number'] . " ha sido asignado";
             $body = "
@@ -121,6 +121,47 @@ class EmailHelper {
                 </div>
             </body></html>";
             self::sendHtml($ticket['req_email'], $subject, $body);
+        }
+
+        // Send to assigned technician
+        if (!empty($ticket['tech_email'])) {
+            $subject = "🛠️ Se te ha asignado el Ticket #" . $ticket['ticket_number'];
+            $body = "
+            <html><head><title>Ticket Asignado</title></head>
+            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f5f7; padding: 20px;'>
+                <div style='max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e1e4e8; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
+                    <h2 style='color: #0d6efd; margin-top: 0; font-size: 1.5rem; border-bottom: 2px solid #f4f5f7; padding-bottom: 15px;'>Mesa de Ayuda - Ovopacific</h2>
+                    <p style='font-size: 1rem; color: #555;'>Hola <strong>" . htmlspecialchars($ticket['tech_first']) . "</strong>, se te ha asignado una nueva solicitud de soporte para tu atención.</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                        <tr>
+                            <td style='padding: 10px 0; font-weight: bold; width: 160px; color: #666; border-bottom: 1px dashed #f4f5f7;'>Ticket Nro:</td>
+                            <td style='padding: 10px 0; color: #111; font-weight: bold; border-bottom: 1px dashed #f4f5f7;'>#" . htmlspecialchars($ticket['ticket_number']) . "</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px 0; font-weight: bold; color: #666; border-bottom: 1px dashed #f4f5f7;'>Título:</td>
+                            <td style='padding: 10px 0; color: #111; border-bottom: 1px dashed #f4f5f7;'>" . htmlspecialchars($ticket['title']) . "</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px 0; font-weight: bold; color: #666; border-bottom: 1px dashed #f4f5f7;'>Solicitante:</td>
+                            <td style='padding: 10px 0; color: #111; border-bottom: 1px dashed #f4f5f7;'>" . htmlspecialchars($ticket['req_first'] . ' ' . $ticket['req_last']) . " (" . htmlspecialchars($ticket['req_email']) . ")</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px 0; font-weight: bold; color: #666; border-bottom: 1px dashed #f4f5f7;'>Estado:</td>
+                            <td style='padding: 10px 0; border-bottom: 1px dashed #f4f5f7;'><span style='background-color: #0d6efd18; color: #0d6efd; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;'>{$statusName}</span></td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px 0; font-weight: bold; color: #666;'>Prioridad:</td>
+                            <td style='padding: 10px 0;'><span style='background-color: {$priorityColor}18; color: {$priorityColor}; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;'>" . htmlspecialchars($ticket['priority_name'] ?? 'Normal') . "</span></td>
+                        </tr>
+                    </table>
+                    <div style='text-align: center; margin-top: 30px;'>
+                        <a href='{$appUrl}/tickets/view/" . $ticket['id'] . "' style='display: inline-block; padding: 12px 24px; background-color: #0d6efd; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.95rem;'>Ver y Atender Ticket</a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #e1e4e8; margin-top: 30px;' />
+                    <p style='font-size: 0.775rem; color: #888; text-align: center; margin-bottom: 0;'>Este es un correo de notificación automático del sistema de Tickets de Ovopacific. Por favor no responder a este mensaje.</p>
+                </div>
+            </body></html>";
+            self::sendHtml($ticket['tech_email'], $subject, $body);
         }
     }
 

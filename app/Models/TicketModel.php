@@ -97,7 +97,7 @@ class TicketModel {
                                      p.name as priority_name, p.color_hex as priority_color,
                                      s.name as status_name, s.color_hex as status_color,
                                      req.first_name as req_first, req.last_name as req_last, req.email as req_email, req.phone as req_phone, req.avatar_path as req_avatar,
-                                     tech.first_name as tech_first, tech.last_name as tech_last, tech.avatar_path as tech_avatar
+                                     tech.first_name as tech_first, tech.last_name as tech_last, tech.email as tech_email, tech.avatar_path as tech_avatar
                               FROM tickets t
                               LEFT JOIN departments d ON t.department_id = d.id
                               LEFT JOIN categories c ON t.category_id = c.id
