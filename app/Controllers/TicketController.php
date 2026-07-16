@@ -305,6 +305,14 @@ class TicketController extends Controller {
         $currentUser = $this->session->get('user');
         Auditor::log($currentUser['id'], 'TICKET_ASSIGN', "Asignación de técnico a ticket ID: {$ticketId}");
 
+        // Notify requester that a technician has been assigned
+        if ($techId) {
+            $updatedTicket = TicketModel::getById($ticketId);
+            if ($updatedTicket) {
+                EmailHelper::notifyTicketAssigned($updatedTicket);
+            }
+        }
+
         $this->session->setFlash('success', 'Técnico asignado correctamente.');
         $this->response->redirect("/tickets/view/{$ticketId}");
     }
@@ -321,6 +329,14 @@ class TicketController extends Controller {
 
         $currentUser = $this->session->get('user');
         Auditor::log($currentUser['id'], 'TICKET_STATUS_CHANGE', "Cambio de estado ticket ID: {$ticketId} a ID: {$statusId}");
+
+        // Notify requester and admin when ticket is resolved (7) or closed (8)
+        if (in_array($statusId, [7, 8])) {
+            $updatedTicket = TicketModel::getById($ticketId);
+            if ($updatedTicket) {
+                EmailHelper::notifyTicketResolved($updatedTicket);
+            }
+        }
 
         $this->session->setFlash('success', 'Estado del ticket modificado.');
         $this->response->redirect("/tickets/view/{$ticketId}");
@@ -465,6 +481,10 @@ class TicketController extends Controller {
         $ticketId = (int)$id;
         $currentUser = $this->session->get('user');
 
+        // Grab previous ticket state to detect changes
+        $prevTicket = TicketModel::getById($ticketId);
+        $prevTechId = $prevTicket['assigned_technician_id'] ?? null;
+
         $techId = $request->post('assigned_technician_id', '');
         $techId = !empty($techId) ? (int)$techId : null;
         
@@ -482,6 +502,19 @@ class TicketController extends Controller {
         $stmt->execute([$categoryId, $ticketId]);
 
         Auditor::log($currentUser['id'], 'TICKET_PROPERTIES_UPDATE', "Actualización de propiedades del ticket ID: {$ticketId}");
+
+        // Reload updated ticket once for email logic
+        $updatedTicket = TicketModel::getById($ticketId);
+        if ($updatedTicket) {
+            // Notify requester if a technician was newly assigned
+            if ($techId && $techId !== (int)$prevTechId) {
+                EmailHelper::notifyTicketAssigned($updatedTicket);
+            }
+            // Notify requester + admin if ticket is being resolved or closed
+            if (in_array($statusId, [7, 8])) {
+                EmailHelper::notifyTicketResolved($updatedTicket);
+            }
+        }
 
         $this->session->setFlash('success', 'Propiedades del ticket actualizadas correctamente.');
         $this->response->redirect("/tickets/view/{$ticketId}");
