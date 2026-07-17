@@ -37,14 +37,6 @@ if ($currentUser):
 
     <!-- Right Top Bar Actions -->
     <div class="d-flex align-items-center gap-3">
-        <!-- Botón principal "Nuevo" -->
-        <a href="/tickets/create" class="btn btn-primary d-flex align-items-center gap-1 py-1 px-3" style="border-radius: var(--radius-sm);">
-            <i class="bi bi-plus-lg"></i>
-            <span class="fw-semibold">Nuevo</span>
-        </a>
-
-
-
         <!-- Notifications Dropdown -->
         <div class="dropdown">
             <button class="btn btn-outline-secondary border-0 p-2 position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -55,7 +47,7 @@ if ($currentUser):
                     </span>
                 <?php endif; ?>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto; background-color: var(--card-bg); border: 1px solid var(--border-color) !important;">
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0" aria-labelledby="notificationDropdown" style="width: 300px; max-height: 400px; overflow-y: auto; background-color: #ffffff !important; z-index: 1100; border: 1px solid var(--border-color) !important;">
                 <li class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background-color: var(--body-bg); border-color: var(--border-color) !important;">
                     <span class="fw-bold" style="color: var(--text-main);">Notificaciones</span>
                     <span class="badge bg-primary rounded-pill"><?php echo count($notifications); ?> nuevas</span>
@@ -88,7 +80,7 @@ if ($currentUser):
                     </div>
                 <?php endif; ?>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="userMenu" style="background-color: var(--card-bg); border: 1px solid var(--border-color) !important;">
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="userMenu" style="background-color: #ffffff !important; z-index: 1100; border: 1px solid var(--border-color) !important;">
                 <li class="dropdown-header">
                     <h6 class="mb-0" style="color: var(--text-main);"><?php echo htmlspecialchars($currentUser['first_name'] . ' ' . $currentUser['last_name']); ?></h6>
                     <small class="text-muted"><?php echo htmlspecialchars($currentUser['email']); ?></small>
