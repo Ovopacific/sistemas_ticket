@@ -143,12 +143,16 @@ class UserModel {
 
     public static function getTechnicians(): array {
         $db = Database::getConnection();
+        // Optimized: single JOIN instead of N correlated subqueries (PERF-04)
         $stmt = $db->query("SELECT u.*, t.specialty, t.status as tech_status, d.name as department_name,
-                            (SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = u.id AND status_id NOT IN (7, 8, 9)) as active_tickets_count
-                            FROM users u 
-                            INNER JOIN technicians t ON u.id = t.user_id 
-                            LEFT JOIN departments d ON u.department_id = d.id 
+                            COUNT(tk.id) as active_tickets_count
+                            FROM users u
+                            INNER JOIN technicians t ON u.id = t.user_id
+                            LEFT JOIN departments d ON u.department_id = d.id
+                            LEFT JOIN tickets tk ON tk.assigned_technician_id = u.id
+                                AND tk.status_id NOT IN (7, 8, 9)
                             WHERE u.status = 'active'
+                            GROUP BY u.id, t.specialty, t.status, d.name
                             ORDER BY active_tickets_count ASC");
         return $stmt->fetchAll();
     }

@@ -65,6 +65,7 @@
                                 <a href="/users/edit/<?php echo $user['id']; ?>" class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="bi bi-pencil"></i></a>
                                 <?php if ($user['id'] !== $_SESSION['user']['id']): ?>
                                     <form action="/users/toggle/<?php echo $user['id']; ?>" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                                         <button type="submit" class="btn btn-sm <?php echo $user['status'] === 'active' ? 'btn-outline-danger' : 'btn-outline-success'; ?>" title="<?php echo $user['status'] === 'active' ? 'Desactivar' : 'Activar'; ?>">
                                             <i class="bi <?php echo $user['status'] === 'active' ? 'bi-person-x' : 'bi-person-check'; ?>"></i>
                                         </button>

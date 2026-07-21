@@ -6,6 +6,7 @@
 namespace App\Helpers;
 
 use App\Core\Database;
+use App\Helpers\Logger;
 use Exception;
 
 class FileUploader {
@@ -45,6 +46,22 @@ class FileUploader {
 
         if (!in_array($ext, $allowedExts, true)) {
             return ['status' => false, 'error' => 'Extensión de archivo no permitida.'];
+        }
+
+        // Validate real MIME type of the file content to prevent disguised uploads (SEC-05)
+        // Only active if the finfo extension is available (standard in PHP 5.3+)
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $realMime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            // Block clearly dangerous MIME types regardless of extension
+            $blockedMimes = ['text/x-php', 'application/x-php', 'application/php', 'text/php',
+                             'application/x-httpd-php', 'application/x-httpd-php-source',
+                             'text/x-sh', 'application/x-sh', 'text/x-perl'];
+            if (in_array(strtolower($realMime), $blockedMimes, true)) {
+                Logger::error("Intento de subida de archivo con MIME peligroso: {$realMime} — Archivo: {$filename}");
+                return ['status' => false, 'error' => 'Tipo de archivo no permitido por seguridad.'];
+            }
         }
 
         // Sanitize filename

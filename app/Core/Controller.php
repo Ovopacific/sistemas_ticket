@@ -79,16 +79,28 @@ class Controller {
 
     /**
      * Fetches application settings branding safely.
+     * Result is cached in session for 5 minutes to avoid a DB query on every page render (PERF-02).
      */
     private function getAppBranding(): array {
+        // Use cached version if available and less than 5 minutes old
+        $cached    = $_SESSION['_app_branding_cache']    ?? null;
+        $cachedAt  = $_SESSION['_app_branding_cache_ts'] ?? 0;
+
+        if ($cached !== null && (time() - $cachedAt) < 300) {
+            return $cached;
+        }
+
         try {
-            $db = Database::getConnection();
+            $db   = Database::getConnection();
             $stmt = $db->query("SELECT setting_key, setting_value FROM settings");
             $rows = $stmt->fetchAll();
             $config = [];
             foreach ($rows as $row) {
                 $config[$row['setting_key']] = $row['setting_value'];
             }
+            // Store in session with a timestamp
+            $_SESSION['_app_branding_cache']    = $config;
+            $_SESSION['_app_branding_cache_ts'] = time();
             return $config;
         } catch (\Exception $e) {
             return [];

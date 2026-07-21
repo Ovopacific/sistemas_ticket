@@ -17,17 +17,38 @@ class Session {
             }
             session_save_path($sessionPath);
 
+            // Detect HTTPS automatically: secure cookie in production, plain on localhost (SEC-08)
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+                    || (($_SERVER['SERVER_PORT'] ?? 80) == 443);
+
             // Secure cookie session configurations
             session_set_cookie_params([
                 'lifetime' => 0,
-                'path' => '/',
-                'domain' => '',
-                'secure' => false, // Set to false to allow HTTP on localhost
+                'path'     => '/',
+                'domain'   => '',
+                'secure'   => $isHttps, // true on HTTPS (production), false on HTTP (localhost)
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
             
             session_start();
+
+            // Inactivity timeout: expire session after 30 minutes of no activity (AUTH-03)
+            $inactivityLimit = 1800; // 30 minutes in seconds
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            $isAsset = (bool)preg_match('/\.(ico|map|css|js|png|jpg|jpeg|gif|svg|woff2?|json)$/i', $uri);
+            if (!$isAsset && isset($_SESSION['_last_activity'])) {
+                if ((time() - $_SESSION['_last_activity']) > $inactivityLimit) {
+                    // Session has expired due to inactivity
+                    session_unset();
+                    session_destroy();
+                    session_start();
+                }
+            }
+            if (!$isAsset) {
+                $_SESSION['_last_activity'] = time();
+            }
         }
 
         // Initialize flash messages lifecycle (only for main page requests, not asset 404s/favicons)

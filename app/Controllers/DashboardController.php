@@ -35,24 +35,40 @@ class DashboardController extends Controller {
     private function adminDashboard(): void {
         $db = Database::getConnection();
 
-        // 1. General Metrics Counts
-        $total = $db->query("SELECT COUNT(*) FROM tickets")->fetchColumn();
-        $open = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 1")->fetchColumn(); // Nuevo
-        $assigned = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 3")->fetchColumn(); // Asignado
-        $inProcess = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 4")->fetchColumn(); // En proceso
-        $waiting = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 5")->fetchColumn(); // Esperando Usuario
-        $escalated = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 6")->fetchColumn(); // Escalado
-        $resolved = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 7")->fetchColumn(); // Resuelto
-        $closed = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 8")->fetchColumn(); // Cerrado
-        $cancelled = $db->query("SELECT COUNT(*) FROM tickets WHERE status_id = 9")->fetchColumn(); // Cancelado
+        // 1. General Metrics — consolidated into a single query (PERF-01)
+        // Previously this was 11 separate DB round-trips; now it is just 1.
+        $metricsStmt = $db->query("
+            SELECT
+                COUNT(*)                                                   AS total,
+                SUM(status_id = 1)                                         AS open,
+                SUM(status_id = 3)                                         AS assigned,
+                SUM(status_id = 4)                                         AS inProcess,
+                SUM(status_id = 5)                                         AS waiting,
+                SUM(status_id = 6)                                         AS escalated,
+                SUM(status_id = 7)                                         AS resolved,
+                SUM(status_id = 8)                                         AS closed,
+                SUM(status_id = 9)                                         AS cancelled,
+                SUM(priority_id IN (4, 5))                                 AS urgent,
+                SUM(assigned_technician_id IS NULL)                        AS unassigned,
+                AVG(TIMESTAMPDIFF(MINUTE, created_at, closed_at))          AS avgResolutionMin
+            FROM tickets
+        ");
+        $m = $metricsStmt->fetch();
 
-        $pending = $total - $closed - $cancelled;
-        $urgent = $db->query("SELECT COUNT(*) FROM tickets WHERE priority_id IN (4, 5)")->fetchColumn(); // Crítica, Urgente
-        $unassigned = $db->query("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id IS NULL")->fetchColumn();
+        $total      = (int)($m['total']      ?? 0);
+        $open       = (int)($m['open']       ?? 0);
+        $assigned   = (int)($m['assigned']   ?? 0);
+        $inProcess  = (int)($m['inProcess']  ?? 0);
+        $waiting    = (int)($m['waiting']    ?? 0);
+        $escalated  = (int)($m['escalated']  ?? 0);
+        $resolved   = (int)($m['resolved']   ?? 0);
+        $closed     = (int)($m['closed']     ?? 0);
+        $cancelled  = (int)($m['cancelled']  ?? 0);
+        $urgent     = (int)($m['urgent']     ?? 0);
+        $unassigned = (int)($m['unassigned'] ?? 0);
+        $pending    = $total - $closed - $cancelled;
 
-        // 2. Average Resolution Time (in hours)
-        $avgResolutionMin = $db->query("SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, closed_at)) FROM tickets WHERE closed_at IS NOT NULL")->fetchColumn();
-        $avgResolutionHours = $avgResolutionMin ? round($avgResolutionMin / 60, 1) : 0;
+        $avgResolutionHours = $m['avgResolutionMin'] ? round($m['avgResolutionMin'] / 60, 1) : 0;
 
         // 3. Average Response Time (First response from tech/admin)
         $avgResponseMin = $db->query("
@@ -163,11 +179,22 @@ class DashboardController extends Controller {
     private function technicianDashboard(int $techId): void {
         $db = Database::getConnection();
 
-        // 1. My Personal workload
-        $totalMyTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = $techId")->fetchColumn();
-        $myPending = $db->query("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = $techId AND status_id NOT IN (7, 8, 9)")->fetchColumn();
-        $myUrgent = $db->query("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = $techId AND status_id NOT IN (7, 8, 9) AND priority_id IN (4, 5)")->fetchColumn();
-        $myInProcess = $db->query("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = $techId AND status_id = 4")->fetchColumn();
+        // 1. My Personal workload — using prepared statements to prevent SQL injection
+        $stmtTotal = $db->prepare("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = ?");
+        $stmtTotal->execute([$techId]);
+        $totalMyTickets = $stmtTotal->fetchColumn();
+
+        $stmtPending = $db->prepare("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = ? AND status_id NOT IN (7, 8, 9)");
+        $stmtPending->execute([$techId]);
+        $myPending = $stmtPending->fetchColumn();
+
+        $stmtUrgent = $db->prepare("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = ? AND status_id NOT IN (7, 8, 9) AND priority_id IN (4, 5)");
+        $stmtUrgent->execute([$techId]);
+        $myUrgent = $stmtUrgent->fetchColumn();
+
+        $stmtInProcess = $db->prepare("SELECT COUNT(*) FROM tickets WHERE assigned_technician_id = ? AND status_id = 4");
+        $stmtInProcess->execute([$techId]);
+        $myInProcess = $stmtInProcess->fetchColumn();
 
         // 2. Personal Assignments Tickets list
         $stmt = $db->prepare("SELECT t.*, s.name as status_name, s.color_hex as status_color, 
@@ -206,17 +233,29 @@ class DashboardController extends Controller {
     public function markNotificationRead(Request $request, string $id): void {
         $this->authorize(['admin', 'technician', 'user']);
         $notifId = (int)$id;
+        $currentUser = $this->session->get('user');
 
         $db = Database::getConnection();
-        $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE id = ?");
-        $stmt->execute([$notifId]);
 
-        // Grab ticket id to redirect there
-        $ticketId = $db->query("SELECT ticket_id FROM notifications WHERE id = $notifId")->fetchColumn();
-        if ($ticketId) {
-            $this->response->redirect("/tickets/view/{$ticketId}");
+        // Fetch notification and verify ownership to prevent IDOR
+        $stmtCheck = $db->prepare("SELECT user_id, ticket_id FROM notifications WHERE id = ?");
+        $stmtCheck->execute([$notifId]);
+        $notification = $stmtCheck->fetch();
+
+        if (!$notification || (int)$notification['user_id'] !== (int)$currentUser['id']) {
+            // Silently redirect — do not reveal whether the notification exists
+            $this->response->redirect('/dashboard');
+            return;
+        }
+
+        // Mark as read only if it belongs to the current user
+        $stmt = $db->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$notifId, $currentUser['id']]);
+
+        if ($notification['ticket_id']) {
+            $this->response->redirect("/tickets/view/{$notification['ticket_id']}");
         } else {
-            $this->response->redirect("/dashboard");
+            $this->response->redirect('/dashboard');
         }
     }
 }

@@ -43,25 +43,47 @@ class AuthController extends Controller {
             $this->response->redirect('/login');
         }
 
+        // Brute Force protection: max 5 failed attempts, 10-minute lockout (AUTH-05)
+        $failedAttempts  = (int)($this->session->get('login_failed_attempts') ?? 0);
+        $lockoutUntil    = (int)($this->session->get('login_lockout_until') ?? 0);
+
+        if ($lockoutUntil > time()) {
+            $minutesLeft = ceil(($lockoutUntil - time()) / 60);
+            $this->session->setFlash('error', "Demasiados intentos fallidos. Espere {$minutesLeft} minuto(s) antes de intentar de nuevo.");
+            $this->response->redirect('/login');
+            return;
+        }
+
         $result = Auth::login($username, $password);
         \App\Helpers\Logger::info("Intento de Login Local para usuario: {$username}. Resultado: " . var_export($result, true));
 
         if ($result['status']) {
+            // Clear brute force counters on successful login
+            $this->session->remove('login_failed_attempts');
+            $this->session->remove('login_lockout_until');
+
             $user = $result['user'];
-            \App\Helpers\Logger::info("Autenticacion exitosa para usuario: {$username}. Session ID: " . session_id());
+
+            // Regenerate session ID to prevent Session Fixation attacks (AUTH-01)
+            session_regenerate_id(true);
+
+            \App\Helpers\Logger::info("Autenticacion exitosa para usuario: {$username}. Nuevo Session ID: " . session_id());
             
             // Set session variables
             $this->session->set('user', [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'email' => $user['email'],
-                'first_name' => $user['first_name'],
-                'last_name' => $user['last_name'],
-                'role' => $user['role'],
+                'id'            => $user['id'],
+                'username'      => $user['username'],
+                'email'         => $user['email'],
+                'first_name'    => $user['first_name'],
+                'last_name'     => $user['last_name'],
+                'role'          => $user['role'],
                 'department_id' => $user['department_id'],
-                'avatar_path' => $user['avatar_path'],
-                'status' => $user['status']
+                'avatar_path'   => $user['avatar_path'],
+                'status'        => $user['status']
             ]);
+
+            // Regenerate CSRF token after login to prevent token reuse
+            $this->session->remove('csrf_token');
 
             // Set cookie for persistence if chosen
             if ($remember) {
@@ -78,7 +100,17 @@ class AuthController extends Controller {
                 $this->response->redirect('/dashboard');
             }
         } else {
-            $this->session->setFlash('error', $result['error']);
+            // Increment failed attempts counter
+            $failedAttempts++;
+            $this->session->set('login_failed_attempts', $failedAttempts);
+            if ($failedAttempts >= 5) {
+                $this->session->set('login_lockout_until', time() + 600); // 10-minute lockout
+                $this->session->set('login_failed_attempts', 0);
+                \App\Helpers\Logger::error("Bloqueo por fuerza bruta activado para usuario: {$username}");
+                $this->session->setFlash('error', 'Demasiados intentos fallidos. Cuenta bloqueada por 10 minutos.');
+            } else {
+                $this->session->setFlash('error', $result['error']);
+            }
             $this->response->redirect('/login');
         }
     }

@@ -81,6 +81,7 @@ if ($currentUser) {
                             <i class="bi bi-clock-history"></i> <span>Registrar Tiempo (<?php echo $ticket['time_spent']; ?> min)</span>
                         </button>
                         <form action="/tickets/delete/<?php echo $ticket['id']; ?>" method="POST" class="m-0" onsubmit="return confirm('¿Está seguro de que desea eliminar este ticket de forma permanente? Esta acción no se puede deshacer.');">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                             <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" style="border-radius: var(--radius-sm);">
                                 <i class="bi bi-trash"></i> <span>Eliminar Ticket</span>
                             </button>
@@ -171,6 +172,7 @@ if ($currentUser) {
                                             <div class="d-flex gap-3">
                                                 <button onclick="enableCommentEdit(<?php echo $comment['id']; ?>)" class="btn btn-link p-0 text-decoration-none text-xs text-muted" style="font-size: 11px;"><i class="bi bi-pencil me-1"></i>Editar</button>
                                                 <form action="/comments/delete/<?php echo $comment['id']; ?>" method="POST" class="m-0" onsubmit="return confirm('¿Eliminar este mensaje?');">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                                                     <button type="submit" class="btn btn-link p-0 text-decoration-none text-xs text-danger" style="font-size: 11px;"><i class="bi bi-trash me-1"></i>Eliminar</button>
                                                 </form>
                                             </div>
@@ -245,6 +247,7 @@ if ($currentUser) {
                     </div>
                     <div class="card-body p-3">
                         <form action="/tickets/update-properties/<?php echo $ticket['id']; ?>" method="POST" class="d-flex flex-column gap-3">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                             <div>
                                 <label class="form-label text-xs fw-semibold text-muted mb-1">Agente Asignado</label>
                                 <select class="form-select form-select-sm text-xs" name="assigned_technician_id" style="font-size: 0.8rem;">
@@ -361,6 +364,7 @@ if ($currentUser) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="/tickets/time/<?php echo $ticket['id']; ?>" method="POST" class="m-0">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="time_spent" class="form-label fw-semibold text-xs">Tiempo Adicional a Sumar (en minutos) *</label>

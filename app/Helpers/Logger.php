@@ -15,6 +15,12 @@ class Logger {
         $date = date('Y-m-d');
         $time = date('H:i:s');
         $logFile = $logDir . "/app-{$date}.log";
+
+        // Simple size-based rotation: limit daily log file to 5MB (LOG-01)
+        if (file_exists($logFile) && filesize($logFile) > 5242880) {
+            rename($logFile, $logDir . "/app-{$date}." . time() . ".log");
+        }
+
         $formattedMessage = "[{$date} {$time}] [{$level}]: {$message}" . PHP_EOL;
 
         file_put_contents($logFile, $formattedMessage, FILE_APPEND);

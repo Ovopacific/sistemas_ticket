@@ -194,7 +194,8 @@ class UserController extends Controller {
 
         $avatarPath = $user['avatar_path'];
         $avatarUrl = trim($request->post('avatar_url', ''));
-        if (!empty($avatarUrl)) {
+        // Only accept HTTPS URLs to prevent storing arbitrary or malicious URLs (SEC-09)
+        if (!empty($avatarUrl) && str_starts_with($avatarUrl, 'https://')) {
             $avatarPath = $avatarUrl;
         } else {
             $avatarFile = $request->file('avatar');
@@ -251,6 +252,13 @@ class UserController extends Controller {
     public function toggleStatus(Request $request, string $id): void {
         $this->authorize(['admin']);
         $userId = (int)$id;
+
+        // CSRF Verification for critical state change
+        if (!$this->session->validateCsrfToken($request->post('csrf_token'))) {
+            $this->session->setFlash('error', 'Token de seguridad inválido.');
+            $this->response->redirect('/users');
+            return;
+        }
 
         $newStatus = UserModel::toggleStatus($userId);
         

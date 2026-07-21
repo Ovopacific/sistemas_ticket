@@ -297,6 +297,14 @@ class TicketController extends Controller {
     public function assign(Request $request, string $id): void {
         $this->authorize(['admin', 'technician']);
         $ticketId = (int)$id;
+
+        // CSRF Verification for critical assignment action
+        if (!$this->session->validateCsrfToken($request->post('csrf_token'))) {
+            $this->session->setFlash('error', 'Token de seguridad inválido.');
+            $this->response->redirect("/tickets/view/{$ticketId}");
+            return;
+        }
+
         $techId = $request->post('assigned_technician_id', '');
         $techId = !empty($techId) ? (int)$techId : null;
 

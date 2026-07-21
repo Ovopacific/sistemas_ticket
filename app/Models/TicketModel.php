@@ -192,7 +192,10 @@ class TicketModel {
         $result = $stmt->execute([$statusId, $closedAt, $id]);
 
         if ($result) {
-            $statusName = $db->query("SELECT name FROM statuses WHERE id = $statusId")->fetchColumn();
+            // Use prepared statement to avoid SQL injection
+            $stmtStatus = $db->prepare("SELECT name FROM statuses WHERE id = ?");
+            $stmtStatus->execute([$statusId]);
+            $statusName = $stmtStatus->fetchColumn();
             self::createNotification($db, $ticket['requester_id'], $id, "El estado del ticket {$ticket['ticket_number']} cambió a: {$statusName}");
             if ($ticket['assigned_technician_id']) {
                 self::createNotification($db, $ticket['assigned_technician_id'], $id, "El estado del ticket {$ticket['ticket_number']} cambió a: {$statusName}");
