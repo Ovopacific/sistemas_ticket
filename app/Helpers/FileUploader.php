@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Secure File Uploader
+ * Mesa de Ayuda LAN - Cargador Seguro de Archivos
  */
 
 namespace App\Helpers;
@@ -11,8 +11,8 @@ use Exception;
 
 class FileUploader {
     /**
-     * Uploads a file safely checking extensions, size, and sanitizing names.
-     * Returns an array with ['status' => true, 'path' => 'relative/path', 'filename' => 'original_name'] or error array.
+     * Sube un archivo de forma segura comprobando extensiones, tamaño y sanitizando nombres.
+     * Retorna un arreglo con ['status' => true, 'path' => 'ruta/relativa', 'filename' => 'nombre_original'] o arreglo de error.
      */
     public static function upload(array $file, string $customSubFolder = 'attachments'): array {
         if (!isset($file['error']) || is_array($file['error'])) {
@@ -31,9 +31,9 @@ class FileUploader {
                 return ['status' => false, 'error' => 'Error desconocido en la subida del archivo.'];
         }
 
-        // Fetch limits from settings DB
+        // Obtener límites configurados en la base de datos
         $settings = self::getUploadSettings();
-        $maxSize = (int)($settings['max_upload_size'] ?? 10485760); // 10MB default
+        $maxSize = (int)($settings['max_upload_size'] ?? 10485760); // 10MB por defecto
         $allowedExts = explode(',', strtolower($settings['allowed_extensions'] ?? 'pdf,doc,docx,xls,xlsx,png,jpg,jpeg,zip,rar,txt,log'));
 
         if ($file['size'] > $maxSize) {
@@ -48,13 +48,13 @@ class FileUploader {
             return ['status' => false, 'error' => 'Extensión de archivo no permitida.'];
         }
 
-        // Validate real MIME type of the file content to prevent disguised uploads (SEC-05)
-        // Only active if the finfo extension is available (standard in PHP 5.3+)
+        // Validar tipo MIME real del archivo para prevenir archivos maliciosos camuflados (SEC-05)
+        // Solo activo si la extensión finfo está disponible
         if (function_exists('finfo_open')) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $realMime = finfo_file($finfo, $file['tmp_name']);
             finfo_close($finfo);
-            // Block clearly dangerous MIME types regardless of extension
+            // Bloquear tipos MIME potencialmente peligrosos
             $blockedMimes = ['text/x-php', 'application/x-php', 'application/php', 'text/php',
                              'application/x-httpd-php', 'application/x-httpd-php-source',
                              'text/x-sh', 'application/x-sh', 'text/x-perl'];
@@ -64,7 +64,7 @@ class FileUploader {
             }
         }
 
-        // Sanitize filename
+        // Sanitizar el nombre del archivo
         $cleanName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', pathinfo($filename, PATHINFO_FILENAME));
         $newFilename = $cleanName . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
 
@@ -79,7 +79,7 @@ class FileUploader {
         $relativeWebPath = 'uploads/' . $customSubFolder . '/' . $newFilename;
 
         if (move_uploaded_file($file['tmp_name'], $destinationPath)) {
-            // Write a dummy index.html inside uploads to prevent folder listing
+            // Escribir un archivo index.html vacío dentro de uploads para evitar listado de directorios
             if (!file_exists($targetDir . '/index.html')) {
                 file_put_contents($targetDir . '/index.html', '');
             }

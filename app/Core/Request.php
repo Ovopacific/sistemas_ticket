@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Request Wrapper
+ * Mesa de Ayuda LAN - Envoltorio de Peticiones HTTP (Request)
  */
 
 namespace App\Core;
@@ -17,7 +17,7 @@ class Request {
             $path = substr($path, 0, $position);
         }
         
-        // Remove sub-folder path if it's hosted in a subdirectory
+        // Remover la ruta de subcarpeta si está alojado en un subdirectorio
         $scriptName = $_SERVER['SCRIPT_NAME'];
         $baseDir = dirname($scriptName);
         if ($baseDir !== '/' && $baseDir !== '\\') {
@@ -46,7 +46,7 @@ class Request {
             }
         }
         if ($this->getMethod() === 'POST') {
-            // Check for JSON body
+            // Verificar si el cuerpo viene en formato JSON
             $contentType = $_SERVER["CONTENT_TYPE"] ?? '';
             if (str_contains($contentType, 'application/json')) {
                 $rawInput = file_get_contents('php://input');

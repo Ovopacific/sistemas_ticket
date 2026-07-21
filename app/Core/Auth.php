@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Authentication & LDAP Connector
+ * Mesa de Ayuda LAN - Módulo de Autenticación y Conector LDAP
  */
 
 namespace App\Core;
@@ -12,12 +12,12 @@ use PDO;
 
 class Auth {
     /**
-     * Attempts login via Local DB or LDAP (Active Directory).
+     * Intenta el inicio de sesión mediante Base de Datos local o LDAP (Active Directory).
      */
     public static function login(string $username, string $password): array {
         $db = Database::getConnection();
         
-        // 1. Fetch system LDAP configuration
+        // 1. Obtener la configuración del sistema LDAP
         $stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'ldap_%'");
         $settings = [];
         while ($row = $stmt->fetch()) {
@@ -31,7 +31,7 @@ class Auth {
             $ldapResult = self::authenticateLDAP($username, $password, $settings);
             
             if ($ldapResult['status']) {
-                // Synced user in local database
+                // Sincronizar usuario autenticado en la base de datos local
                 $user = self::syncLDAPUser($ldapResult['user_data']);
                 if ($user && $user['status'] === 'active') {
                     Auditor::log($user['id'], 'LOGIN_LDAP', "Inicio de sesión LDAP exitoso desde IP");
@@ -39,11 +39,11 @@ class Auth {
                 }
                 return ['status' => false, 'error' => 'Usuario LDAP desactivado en la Mesa de Ayuda.'];
             }
-            // If LDAP fails, we can optionally fall back to Local DB for Admin accounts
+            // Si LDAP falla, se intenta alternativamente con la BD local para cuentas de administrador
             Logger::info("LDAP falló. Intentando base de datos local para el usuario: {$username}");
         }
 
-        // 2. Standard Database Login
+        // 2. Autenticación estándar en la Base de Datos local
         $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch();
@@ -60,7 +60,7 @@ class Auth {
     }
 
     /**
-     * Authenticate via LDAP Active Directory
+     * Autentica credenciales contra el servidor LDAP / Active Directory
      */
     private static function authenticateLDAP(string $username, string $password, array $config): array {
         if (!function_exists('ldap_connect')) {
@@ -70,7 +70,7 @@ class Auth {
 
         $host = $config['ldap_host'] ?? '';
         $port = (int)($config['ldap_port'] ?? 389);
-        $dnPattern = $config['ldap_dn'] ?? ''; // e.g. "uid={username},ou=users,dc=empresa,dc=lan" or "DOMAIN\\{username}"
+        $dnPattern = $config['ldap_dn'] ?? ''; // ej. "uid={username},ou=users,dc=empresa,dc=lan" o "DOMINIO\\{username}"
         $searchBase = $config['ldap_search_base'] ?? '';
 
         if (empty($host) || empty($dnPattern)) {
@@ -78,7 +78,7 @@ class Auth {
             return ['status' => false, 'error' => 'Configuración LDAP incompleta.'];
         }
 
-        // Bind user DN representation
+        // Formatear el DN del usuario a autenticar
         $userBindDN = str_replace('{username}', $username, $dnPattern);
 
         $ldapConn = ldap_connect($host, $port);
@@ -86,18 +86,18 @@ class Auth {
             return ['status' => false, 'error' => 'No se pudo conectar al servidor LDAP.'];
         }
 
-        // Set protocols
+        // Configurar opciones de protocolo LDAP
         ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
 
         try {
-            // Attempt bind
+            // Intentar autenticación (enlace)
             $bind = @ldap_bind($ldapConn, $userBindDN, $password);
             if ($bind) {
-                // Fetch user attributes to sync them
+                // Obtener atributos del usuario para la sincronización
                 $filter = "(samaccountname={$username})";
                 if (empty($searchBase)) {
-                    // Try to guess filter or use dn
+                    // Intento de filtro estándar por usuario
                     $filter = "(uid={$username})";
                 }
                 
@@ -119,7 +119,7 @@ class Auth {
                 }
 
                 if (empty($info)) {
-                    // Fallback basic details if search fails but bind succeeded
+                    // Datos básicos de respaldo en caso de fallo en la búsqueda de detalles
                     $info = [
                         'username' => $username,
                         'email' => "{$username}@empresa.lan",
@@ -142,7 +142,7 @@ class Auth {
     }
 
     /**
-     * Create or update the LDAP user local profile record.
+     * Crea o actualiza el perfil local del usuario autenticado vía LDAP.
      */
     private static function syncLDAPUser(array $data): ?array {
         try {
@@ -152,7 +152,7 @@ class Auth {
             $user = $stmt->fetch();
 
             if ($user) {
-                // Update LDAP details
+                // Actualizar detalles del usuario LDAP
                 $update = $db->prepare("UPDATE users SET email = ?, first_name = ?, last_name = ?, phone = ?, position = ? WHERE id = ?");
                 $update->execute([
                     $data['email'],
@@ -167,7 +167,7 @@ class Auth {
                 $user['last_name'] = $data['last_name'];
                 return $user;
             } else {
-                // Insert new LDAP user (role defaults to standard 'user')
+                // Insertar nuevo usuario proveniente de LDAP (rol por defecto: 'user')
                 $insert = $db->prepare("INSERT INTO users (username, password, email, first_name, last_name, role, phone, position, status) VALUES (?, ?, ?, ?, ?, 'user', ?, ?, 'active')");
                 $dummyPassword = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
                 $insert->execute([

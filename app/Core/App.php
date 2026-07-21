@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Application Framework Router & Dispatcher
+ * Mesa de Ayuda LAN - Enrutador y Despachador de la Aplicación
  */
 
 namespace App\Core;
@@ -26,26 +26,26 @@ class App {
     }
 
     /**
-     * Resolves the request route and dispatches it.
+     * Resuelve la ruta de la petición HTTP y ejecuta el controlador correspondiente.
      */
     public function run(): void {
         $method = $this->request->getMethod();
         $path = $this->request->getPath();
 
-        // Check exact match first
+        // Verificar coincidencia exacta de ruta primero
         $callback = $this->routes[$method][$path] ?? null;
 
         $params = [];
 
-        // Check pattern matches (e.g. /tickets/view/{id} where {id} matches a number or string)
+        // Verificar coincidencias por patrón dinámico (ej. /tickets/view/{id})
         if (!$callback) {
             foreach ($this->routes[$method] ?? [] as $routePath => $routeCallback) {
-                // Convert {param} to capture groups
+                // Convertir {param} a grupos de captura regex
                 $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_\-]+)', $routePath);
                 $pattern = '#^' . $pattern . '$#';
 
                 if (preg_match($pattern, $path, $matches)) {
-                    array_shift($matches); // remove full match
+                    array_shift($matches); // Remover coincidencia completa
                     $params = $matches;
                     $callback = $routeCallback;
                     break;
@@ -60,7 +60,7 @@ class App {
             return;
         }
 
-        // Instantiate and run controller action
+        // Instanciar y ejecutar la acción del controlador
         [$controllerClass, $action] = $callback;
         
         if (class_exists($controllerClass)) {
@@ -71,7 +71,7 @@ class App {
             }
         }
 
-        // Fallback internal error
+        // Error interno de respaldo
         $this->response->setStatusCode(500);
         $controller = new Controller();
         $controller->render('errors/500', ['message' => "El controlador o acción '$controllerClass@$action' no pudo ser resuelto."], 'Error del Servidor');

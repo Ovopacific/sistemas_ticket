@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Base Controller
+ * Mesa de Ayuda LAN - Controlador Base
  */
 
 namespace App\Core;
@@ -15,19 +15,19 @@ class Controller {
     }
 
     /**
-     * Renders a view inside the standard template wrapper.
+     * Renderiza una vista dentro de las plantillas principales (encabezado, barra lateral y pie de página).
      */
     public function render(string $view, array $data = [], string $title = 'Mesa de Ayuda'): void {
-        // Extract data values as variables
+        // Extraer los datos del arreglo como variables individuales
         extract($data);
 
-        // Fetch settings from DB if available for logo/colors
+        // Obtener la configuración visual del sistema (marca, colores y logo)
         $appConfig = $this->getAppBranding();
         $theme_color = $appConfig['theme_color'] ?? '#0d6efd';
         $company_name = $appConfig['company_name'] ?? 'Mesa de Ayuda Corp';
         $company_logo = $appConfig['company_logo'] ?? '';
 
-        // Start buffering main view
+        // Iniciar el búfer de salida para la vista principal
         ob_start();
         $viewPath = __DIR__ . "/../../views/{$view}.php";
         if (file_exists($viewPath)) {
@@ -37,14 +37,14 @@ class Controller {
         }
         $content = ob_get_clean();
 
-        // Get notifications if logged in
+        // Obtener las notificaciones no leídas si el usuario ha iniciado sesión
         $currentUser = $this->session->get('user');
         $notifications = [];
         if ($currentUser) {
             $notifications = $this->getUnreadNotifications($currentUser['id']);
         }
 
-        // Render overall layout
+        // Renderizar la estructura general del sitio
         require __DIR__ . '/../../views/layouts/header.php';
         if ($currentUser) {
             require __DIR__ . '/../../views/layouts/sidebar.php';
@@ -54,7 +54,7 @@ class Controller {
     }
 
     /**
-     * Checks if current request is authorized under given roles.
+     * Verifica si la petición actual está autorizada para los roles especificados.
      */
     protected function authorize(array $allowedRoles = []): void {
         $user = $this->session->get('user');
@@ -78,11 +78,11 @@ class Controller {
     }
 
     /**
-     * Fetches application settings branding safely.
-     * Result is cached in session for 5 minutes to avoid a DB query on every page render (PERF-02).
+     * Obtiene de forma segura los ajustes de marca e identidad visual de la aplicación.
+     * El resultado se almacena en caché de sesión durante 5 minutos para optimizar el rendimiento (PERF-02).
      */
     private function getAppBranding(): array {
-        // Use cached version if available and less than 5 minutes old
+        // Utilizar versión en caché si está disponible y tiene menos de 5 minutos
         $cached    = $_SESSION['_app_branding_cache']    ?? null;
         $cachedAt  = $_SESSION['_app_branding_cache_ts'] ?? 0;
 
@@ -98,7 +98,7 @@ class Controller {
             foreach ($rows as $row) {
                 $config[$row['setting_key']] = $row['setting_value'];
             }
-            // Store in session with a timestamp
+            // Almacenar en sesión junto con la marca de tiempo
             $_SESSION['_app_branding_cache']    = $config;
             $_SESSION['_app_branding_cache_ts'] = time();
             return $config;
@@ -108,7 +108,7 @@ class Controller {
     }
 
     /**
-     * Fetch recent unread notifications for navbar indicator.
+     * Obtiene las notificaciones recientes no leídas para el indicador del menú superior.
      */
     private function getUnreadNotifications(int $userId): array {
         try {

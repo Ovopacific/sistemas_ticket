@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - Session & CSRF Manager
+ * Mesa de Ayuda LAN - Gestor de Sesiones y Protección CSRF
  */
 
 namespace App\Core;
@@ -10,37 +10,37 @@ class Session {
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
-            // Configure a local sessions path in the project to guarantee write permissions on Windows
+            // Configurar directorio de sesiones local en el proyecto para garantizar permisos de escritura en Windows
             $sessionPath = __DIR__ . '/../../sessions';
             if (!is_dir($sessionPath)) {
                 mkdir($sessionPath, 0755, true);
             }
             session_save_path($sessionPath);
 
-            // Detect HTTPS automatically: secure cookie in production, plain on localhost (SEC-08)
+            // Detectar HTTPS automáticamente: cookie segura en producción, normal en desarrollo local (SEC-08)
             $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
                     || (($_SERVER['SERVER_PORT'] ?? 80) == 443);
 
-            // Secure cookie session configurations
+            // Configuración segura de la cookie de sesión
             session_set_cookie_params([
                 'lifetime' => 0,
                 'path'     => '/',
                 'domain'   => '',
-                'secure'   => $isHttps, // true on HTTPS (production), false on HTTP (localhost)
+                'secure'   => $isHttps, // true en HTTPS (producción), false en HTTP (localhost)
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
             
             session_start();
 
-            // Inactivity timeout: expire session after 30 minutes of no activity (AUTH-03)
-            $inactivityLimit = 1800; // 30 minutes in seconds
+            // Tiempo límite de inactividad: expira la sesión tras 30 minutos de inactividad (AUTH-03)
+            $inactivityLimit = 1800; // 30 minutos en segundos
             $uri = $_SERVER['REQUEST_URI'] ?? '';
             $isAsset = (bool)preg_match('/\.(ico|map|css|js|png|jpg|jpeg|gif|svg|woff2?|json)$/i', $uri);
             if (!$isAsset && isset($_SESSION['_last_activity'])) {
                 if ((time() - $_SESSION['_last_activity']) > $inactivityLimit) {
-                    // Session has expired due to inactivity
+                    // La sesión ha expirado por inactividad
                     session_unset();
                     session_destroy();
                     session_start();
@@ -51,7 +51,7 @@ class Session {
             }
         }
 
-        // Initialize flash messages lifecycle (only for main page requests, not asset 404s/favicons)
+        // Inicializar el ciclo de vida de los mensajes flash (solo para peticiones de páginas, no para recursos estáticos)
         $uri = $_SERVER['REQUEST_URI'] ?? '';
         $isAsset = preg_match('/\.(ico|map|css|js|png|jpg|jpeg|gif|svg|woff2?|json)$/i', $uri);
         
@@ -81,7 +81,7 @@ class Session {
         $_SESSION = [];
     }
 
-    // Flash Messages
+    // Mensajes Flash (Mensajes temporales entre redirecciones)
     public function setFlash(string $key, string $message): void {
         $_SESSION[self::FLASH_KEY][$key] = [
             'remove' => false,
@@ -97,7 +97,7 @@ class Session {
         return isset($_SESSION[self::FLASH_KEY][$key]);
     }
 
-    // CSRF Management
+    // Gestión de Tokens CSRF
     public function getCsrfToken(): string {
         $token = $this->get('csrf_token');
         if (!$token) {
@@ -115,7 +115,7 @@ class Session {
         return hash_equals($stored, $token);
     }
 
-    // Clean up expired flash messages
+    // Limpieza de mensajes flash expirados al destruir la instancia
     public function __destruct() {
         $uri = $_SERVER['REQUEST_URI'] ?? '';
         $isAsset = preg_match('/\.(ico|map|css|js|png|jpg|jpeg|gif|svg|woff2?|json)$/i', $uri);

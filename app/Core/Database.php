@@ -1,6 +1,6 @@
 <?php
 /**
- * Help Desk LAN - PDO Database Singleton Wrapper
+ * Mesa de Ayuda LAN - Conector Singleton a la Base de Datos PDO
  */
 
 namespace App\Core;
@@ -14,7 +14,7 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$instance === null) {
-            // Check if configuration constants are already defined, otherwise load config file
+            // Verificar si las constantes de configuración ya están definidas, de lo contrario cargar archivo de configuración
             if (!defined('DB_HOST')) {
                 $configFile = __DIR__ . '/../../config/config.php';
                 if (!file_exists($configFile)) {
