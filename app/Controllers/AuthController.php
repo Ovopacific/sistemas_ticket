@@ -82,8 +82,9 @@ class AuthController extends Controller {
                 'status'        => $user['status']
             ]);
 
-            // Regenerate CSRF token after login to prevent token reuse
+            // Regenerar token CSRF tras el login e inicializar el nuevo inmediatamente
             $this->session->remove('csrf_token');
+            $this->session->getCsrfToken();
 
             // Set cookie for persistence if chosen
             if ($remember) {

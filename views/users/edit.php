@@ -9,7 +9,7 @@
 <div class="card border-0">
     <div class="card-body p-4 p-md-5">
         <form method="POST" action="/users/edit/<?php echo $user['id']; ?>" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 
             <div class="text-center mb-4">
                 <?php if (!empty($user['avatar_path'])): ?>

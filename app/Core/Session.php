@@ -49,6 +49,9 @@ class Session {
             if (!$isAsset) {
                 $_SESSION['_last_activity'] = time();
             }
+
+            // Asegurar que el token CSRF siempre esté inicializado en la sesión
+            $this->getCsrfToken();
         }
 
         // Inicializar el ciclo de vida de los mensajes flash (solo para peticiones de páginas, no para recursos estáticos)

@@ -7,7 +7,7 @@
 <div class="card border-0">
     <div class="card-body p-4 p-md-5">
         <form method="POST" action="/users/create" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 
             <div class="row">
                 <div class="col-md-6 mb-3">

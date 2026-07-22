@@ -7,7 +7,7 @@
 <div class="card border-0">
     <div class="card-body p-4 p-md-5">
         <form method="POST" action="/tickets/create" enctype="multipart/form-data" class="needs-validation">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
 
             <!-- Configuración para rol de Técnico o Administrador -->
             <?php if ($_SESSION['user']['role'] !== 'user' && !empty($users)): ?>
